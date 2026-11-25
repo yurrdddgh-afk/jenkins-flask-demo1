@@ -1,0 +1,36 @@
+pipeline {
+    agent any
+
+    environment {
+        IMAGE = "flask-cicd"
+        TAG = "${env.BUILD_NUMBER}"
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                git branch: 'main',
+                url: 'https://github.com/YOUR_USERNAME/jenkins-flask-demo.git'
+            }
+        }
+
+        stage('Build Image') {
+            steps {
+                sh 'docker build -t $IMAGE:$TAG .'
+            }
+        }
+
+        stage('Test') {
+            steps {
+                sh 'docker run --rm $IMAGE:$TAG pytest -q'
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                sh 'docker rm -f flask-app || true'
+                sh 'docker run -d --name flask-app -p 5000:5000 $IMAGE:$TAG'
+            }
+        }
+    }
+}
